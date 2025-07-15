@@ -1,63 +1,148 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Malla Interactiva Ingeniería</title>
-  <link rel="stylesheet" href="style.css" />
-  <script type="module">
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-    mermaid.initialize({ startOnLoad: true });
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Malla Interactiva Ingeniería Industrial</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f4; }
+    h1 { text-align: center; color: #004d40; }
+    .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+    .semestre { background: #e0f2f1; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .semestre h3 { margin-top: 0; text-align: center; }
+    .ramo { background: #ffffff; margin: 5px 0; padding: 8px; border-left: 5px solid #00796b; cursor: pointer; transition: background 0.3s; }
+    .ramo:hover { background: #e0f7fa; }
+    .ramo.taken { text-decoration: line-through; background: #c8e6c9; border-left-color: #388e3c; }
+    .ramo.available { border-left-color: #388e3c; }
+    .ramo.locked { border-left-color: #c62828; opacity: 0.6; cursor: not-allowed; }
+  </style>
 </head>
 <body>
-  <h1>Malla Curricular - Ingeniería</h1>
-  <div class="mermaid">
-    graph TD
-      C1["Cálculo I"] --> C2["Cálculo II"]
-      C2 --> C3["Cálculo III"]
-      A1["Álgebra I"] --> A2["Álgebra II"]
-      C2 --> ED["Ecuaciones Diferenciales"]
-      A2 --> ED
-      ED --> MN["Métodos Numéricos"]
-      F1["Física I"] --> F2["Física II"]
-      F2 --> FM["Física Moderna"]
-      FM --> OPI["Operaciones y Procesos Industriales"]
-      QG["Química General"] --> OPI
-      C1 --> AE["Análisis Estadístico"]
-      AE --> EA["Estadística Aplicada"]
-      AE --> ME["Modelos Estocásticos"]
-      ME --> MSC["Modelamiento de Sistemas Complejos"]
-      ME --> GPBS["Gestión Producción Bienes y Servicios"]
-      A1 --> IO["Investigación de Operaciones"]
-      A2 --> IO
-      IO --> GPBS
-      IO --> MSC
-      I1["Inglés I"] --> I2["Inglés II"] --> I3["Inglés III"] --> I4["Inglés IV"]
-      IDI["Introducción Diseño"] --> FP["Fund. Programación"] --> PR["Programación"] --> DDC["Diseño Digital Computacional"]
-      PR --> IS["Ingeniería de Sistemas"]
-      IS --> TG["Taller de Gestión"]
-      TG --> GE["Gestión de Emprendimiento"]
-      DDC --> TG
-      FD["Taller de Diseño"] --> II["Intro Innovación"]
-      FD --> TG
-      GE --> GP["Gestión Estratégica"] --> PI["Proyecto Ingeniería"] --> TT["Trabajo de Titulación"]
-      GP --> EP["Evaluación de Proyectos"] --> TEI["Tópico Especialidad I"] --> TEII["Tópico Especialidad II"] --> TEIII["Tópico Especialidad III"]
-      TEI --> PI
-      GP --> GI["Gestión Cadena Suministro"] --> PI
-      GI --> EI["Electivo I"] --> TEIII
-      EI --> EII["Electivo II"] --> TT
-      MP["Marketing Estratégico"] --> GP
-      MP --> IN["Inteligencia de Negocio"]
-      FE["Finanzas"] --> EP
-      AC["Contabilidad y Costos"] --> FE
-      ECO["Fund. Economía"] --> MI["Microeconomía"] --> MA["Macroeconomía"]
-      MA --> SI["Sistemas Información"] --> GI
-      SI --> EI
-      DPP["Diseño de Productos"] --> GPBS
-  </div>
-  <script src="script.js"></script>
+  <h1>Malla Interactiva Ingeniería Industrial</h1>
+  <div class="grid" id="malla"></div>
+
+  <script>
+  const prerequisitos = {
+  "Administración": ["Ing. de Sistemas"],
+  "Álgebra II": ["Álgebra I"],
+  "Análisis Estadístico": ["Cálculo II"],
+  "Análisis de Decisiones": ["Modelos Estocásticos"],
+  "Contabilidad y Costos": ["Administración"],
+  "Cálculo II": ["Cálculo I"],
+  "Cálculo III": ["Cálculo II"],
+  "Diseño Digital": ["Programación"],
+  "Diseño de Productos": ["Operaciones y Procesos"],
+  "Ecuaciones Diferenciales": ["Cálculo II", "Álgebra II"],
+  "Electivo I": ["Sistemas de Información", "Evaluación de Proyectos"],
+  "Electivo II": ["Electivo I"],
+  "Estadística Aplicada": ["Análisis Estadístico"],
+  "Evaluación de Proyectos": ["Finanzas"],
+  "Finanzas": ["Contabilidad y Costos"],
+  "Fund. Economía": ["Cálculo I"],
+  "Fundamentos de Programación": ["Intro al Diseño"],
+  "Física II": ["Física I"],
+  "Física Moderna": ["Física II"],
+  "Gestión Estratégica": ["Marketing Estratégico", "Finanzas"],
+  "Gestión de Cadena": ["Sistemas de Información", "Gestión de Producción"],
+  "Gestión de Emprendimiento": ["Taller de Gestión y Liderazgo", "Intro a la Innovación"],
+  "Gestión de Personas": ["Gestión de Emprendimiento"],
+  "Gestión de Producción": ["Diseño de Productos", "Investigación de Operaciones"],
+  "Ing. de Sistemas": ["Ecuaciones Diferenciales", "Química y Termodinámica"],
+  "Inglés II": ["Inglés I"],
+  "Inglés III": ["Inglés II"],
+  "Inglés IV": ["Inglés III"],
+  "Inteligencia de Negocio": ["Marketing Estratégico", "Tecnologías para la Gestión"],
+  "Investigación de Operaciones": ["Álgebra I", "Álgebra II"],
+  "Intro a la Innovación": ["Taller de Diseño"],
+  "Macroeconomía": ["Microeconomía"],
+  "Marketing Estratégico": ["Estadística Aplicada", "Administración"],
+  "Tecnologías para la Gestión": ["Diseño Digital"],
+  "Métodos Numéricos": ["Cálculo III", "Ecuaciones Diferenciales"],
+  "Microeconomía": ["Fund. Economía"],
+  "Modelamiento de Sistemas": ["Modelos Estocásticos", "Métodos Numéricos"],
+  "Modelos Estocásticos": ["Estadística Aplicada", "Investigación de Operaciones"],
+  "Operaciones y Procesos": ["Química y Termodinámica", "Física Moderna"],
+  "Programación": ["Fundamentos de Programación"],
+  "Proyecto de Ingeniería": ["Tópico I", "Gestión de Personas", "Gestión Estratégica", "Electivo I", "Gestión de Producción"],
+  "Química y Termodinámica": [],
+  "Sistemas de Información": ["Microeconomía", "Macroeconomía"],
+  "Taller de Diseño": ["Fund. Economía"],
+  "Taller de Gestión y Liderazgo": ["Ing. de Sistemas"],
+  "Tópico I": ["Análisis de Decisiones", "Evaluación de Proyectos"],
+  "Tópico II": ["Tópico I"],
+  "Tópico III": ["Electivo I"],
+  "Trabajo de Titulación": ["Tópico II", "Proyecto de Ingeniería", "Gestión de Cadena", "Tópico III", "Electivo II"]
+};
+
+  const malla = [
+    ["Cálculo I", "Álgebra I", "Física I", "Intro a la Ing. Industrial", "Intro al Diseño"],
+    ["Cálculo II", "Álgebra II", "Física II", "Química y Termodinámica", "Fundamentos de Programación"],
+    ["Cálculo III", "Ecuaciones Diferenciales", "Física Moderna", "Programación", "Fund. Economía", "Inglés I"],
+    ["Análisis Estadístico", "Métodos Numéricos", "Ing. de Sistemas", "Diseño Digital", "Taller de Diseño", "Inglés II"],
+    ["Estadística Aplicada", "Operaciones y Procesos", "Administración", "Microeconomía", "Taller de Gestión y Liderazgo", "Inglés III"],
+    ["Macroeconomía", "Contabilidad y Costos", "Investigación de Operaciones", "Tecnologías para la Gestión", "Intro a la Innovación", "Inglés IV"],
+    ["Diseño de Productos", "Marketing Estratégico", "Modelos Estocásticos", "Finanzas", "Gestión de Emprendimiento"],
+    ["Sistemas de Información", "Análisis de Decisiones", "Modelamiento de Sistemas", "Inteligencia de Negocio", "Evaluación de Proyectos"],
+    ["Tópico I", "Gestión de Personas", "Gestión de Producción", "Gestión Estratégica", "Electivo I"],
+    ["Tópico II", "Proyecto de Ingeniería", "Gestión de Cadena", "Tópico III", "Electivo II"],
+    ["Trabajo de Titulación"]
+  ];
+
+  const aprobados = JSON.parse(localStorage.getItem('ramosAprobados') || '[]');
+
+  function guardarAprobados() {
+    localStorage.setItem('ramosAprobados', JSON.stringify(aprobados));
+  }
+
+  function puedeTomarse(ramo) {
+    if (!(ramo in prerequisitos)) return true;
+    return prerequisitos[ramo].every(r => aprobados.includes(r));
+  }
+
+  function toggleRamo(nombre, elemento) {
+    if (!puedeTomarse(nombre) && !aprobados.includes(nombre)) return;
+    const index = aprobados.indexOf(nombre);
+    if (index >= 0) {
+      aprobados.splice(index, 1);
+      elemento.classList.remove("taken");
+    } else {
+      aprobados.push(nombre);
+      elemento.classList.add("taken");
+    }
+    actualizarEstado();
+    guardarAprobados();
+  }
+
+  function actualizarEstado() {
+    document.querySelectorAll('.ramo').forEach(el => {
+      const nombre = el.textContent;
+      el.classList.remove("taken", "available", "locked");
+      if (aprobados.includes(nombre)) {
+        el.classList.add("taken");
+      } else if (puedeTomarse(nombre)) {
+        el.classList.add("available");
+      } else {
+        el.classList.add("locked");
+      }
+    });
+  }
+
+  const contenedor = document.getElementById("malla");
+  malla.forEach((sem, i) => {
+    const div = document.createElement("div");
+    div.className = "semestre";
+    div.innerHTML = `<h3>Semestre ${i + 1}</h3>`;
+    sem.forEach(ramo => {
+      const r = document.createElement("div");
+      r.className = "ramo";
+      r.textContent = ramo;
+      r.onclick = () => toggleRamo(ramo, r);
+      div.appendChild(r);
+    });
+    contenedor.appendChild(div);
+  });
+
+  actualizarEstado();
+  </script>
 </body>
 </html>
-
-
